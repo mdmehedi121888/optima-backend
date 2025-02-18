@@ -1,6 +1,6 @@
 ## create a .env file and set those value
-PORT=
-DB_HOST=
-DB_USER_NM=
-DB_PASSWORD=
-DB=
+PORT=<br>
+DB_HOST=<br>
+DB_USER_NM=<br>
+DB_PASSWORD=<br>
+DB=<br>
