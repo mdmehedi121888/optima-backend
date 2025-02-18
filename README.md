@@ -1,4 +1,4 @@
-## create a .env file and set those value
+# create a .env file and set these value
 PORT=<br>
 DB_HOST=<br>
 DB_USER_NM=<br>
