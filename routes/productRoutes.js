@@ -8,10 +8,12 @@ const {
   deleteProduct,
   getSpecificProducts,
   createProductRecords,
+  getSpecificProductRecords,
 } = require("../controllers/productController");
 
 router.get("/", isAuthenticated, getProducts);
 router.get("/specific", getSpecificProducts);
+router.get("/specificProductRecords", getSpecificProductRecords);
 router.post("/", createProduct);
 router.put("/:id", updateProduct);
 router.delete("/:id", deleteProduct);

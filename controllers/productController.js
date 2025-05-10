@@ -79,6 +79,29 @@ const createProductRecords = async (req, res) => {
   }
 };
 
+const getSpecificProductRecords = async (req, res) => {
+  try {
+    const { station, shift } = req.query;
+
+    // Validate input
+    if (!station || !shift) {
+      return res.status(400).json({
+        error: "Missing required parameters: stations and shifts are required",
+      });
+    }
+
+    const requiredData = { station, shift };
+    const downtimeData = await Product.getSpecificProductRecords(requiredData);
+    res.json(downtimeData);
+  } catch (err) {
+    console.error("Error fetching product data:", err);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: err.message, // This will show the specific error message
+    });
+  }
+};
+
 module.exports = {
   getProducts,
   createProduct,
@@ -86,4 +109,5 @@ module.exports = {
   deleteProduct,
   getSpecificProducts,
   createProductRecords,
+  getSpecificProductRecords,
 };

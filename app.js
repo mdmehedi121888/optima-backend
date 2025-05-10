@@ -8,6 +8,7 @@ const stationRoutes = require("./routes/stationRoutes");
 const shiftRoutes = require("./routes/shiftRoutes");
 const operatorRoutes = require("./routes/operatorRoutes");
 const machineDataRoutes = require("./routes/machineDataRoutes");
+const downtimeProblemRoutes = require("./routes/downtimeProblemRoutes");
 const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
 
@@ -50,6 +51,7 @@ app.use("/api/stations", stationRoutes);
 app.use("/api/shifts", shiftRoutes);
 app.use("/api/operators", operatorRoutes);
 app.use("/api/machineData", machineDataRoutes);
+app.use("/api/downtimeProblem", downtimeProblemRoutes);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Optima Backend Server!");
