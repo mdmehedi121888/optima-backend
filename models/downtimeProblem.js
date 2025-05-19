@@ -72,6 +72,13 @@ class DowntimeProblem {
       throw new Error(`Database query failed: ${error.message}`);
     }
   }
+
+  static async getAllDowntimeRecords() {
+    const result = await connection2.query(
+      "SELECT * FROM `optima_downtime_tracking_tbl` WHERE is_active = 1 order by id desc;"
+    );
+    return result;
+  }
 }
 
 module.exports = DowntimeProblem;

@@ -67,9 +67,20 @@ const getSpecificDowntimeRecords = async (req, res) => {
     });
   }
 };
+
+const getAllDowntimeRecords = async (req, res) => {
+  try {
+    const problems = await DowntimeProblem.getAllDowntimeRecords();
+    res.json(problems);
+  } catch (err) {
+    console.error("Error fetching problem records:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 module.exports = {
   getProblemGroup,
   getSpecificProblems,
   createDowntimeRecords,
   getSpecificDowntimeRecords,
+  getAllDowntimeRecords,
 };

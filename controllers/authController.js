@@ -25,7 +25,10 @@ const login = async (req, res) => {
       stations: user.stations,
     };
 
-    res.json({ message: "Login successful" });
+    res.status(200).json({
+      success: true,
+      message: "Logged in successful",
+    });
   } catch (err) {
     console.error("Login Error:", err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -49,4 +52,31 @@ const checkSession = (req, res) => {
   }
 };
 
-module.exports = { login, logout, checkSession };
+const checkAdmin = (req, res) => {
+  if (req.session.user && req.session.user.role === "Super Admin") {
+    res.json({
+      isAuthenticated: true,
+      user: req.session.user,
+      role: req.session.user.role,
+    });
+  } else {
+    res.json({ isAuthenticated: false });
+  }
+};
+const checkIncharge = (req, res) => {
+  if (
+    req.session.user &&
+    (req.session.user.role === "Incharge" ||
+      req.session.user.role === "Super Admin")
+  ) {
+    res.json({
+      isAuthenticated: true,
+      user: req.session.user,
+      role: req.session.user.role,
+    });
+  } else {
+    res.json({ isAuthenticated: false });
+  }
+};
+
+module.exports = { login, logout, checkSession, checkAdmin, checkIncharge };

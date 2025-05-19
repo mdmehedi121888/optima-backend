@@ -8,12 +8,12 @@ class MachineData {
       // console.log("Received machine data:", { line, startTime, endTime });
 
       const lineColumnMap = {
-        "Final Line": "final_line",
-        "Internal Line": "internal_line",
-        "External Line": "external_line",
+        "Final Line": "final_line_diff",
+        "Internal Line": "internal_line_diff",
+        "External Line": "external_line_diff",
       };
 
-      const column = lineColumnMap[line] || "final_line";
+      const column = lineColumnMap[line] || "final_line_diff";
       const today = new Date().toISOString().split("T")[0];
 
       const startTimestamp = `${today} ${startTime || "00:00"}:00`;
