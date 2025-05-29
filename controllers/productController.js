@@ -35,11 +35,11 @@ const updateProduct = async (req, res) => {
 
 const deleteProduct = async (req, res) => {
   try {
-    const result = await Product.delete(req.params.id);
+    const result = await Product.deleteProduct(req.params.id);
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Product not found or inactive" });
     }
-    res.json({ success: true, message: "Product Deleted Successfully" });
+    res.json({ success: true, message: "Product deleted successfully" });
   } catch (err) {
     console.error("Error deleting product:", err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -50,7 +50,6 @@ const getSpecificProducts = async (req, res) => {
   try {
     const { stations } = req.query;
 
-    // Validate input
     if (!stations) {
       return res.status(400).json({
         error: "Missing required parameters: stations is required",
@@ -64,7 +63,7 @@ const getSpecificProducts = async (req, res) => {
     console.error("Error fetching products:", err);
     res.status(500).json({
       error: "Internal Server Error",
-      message: err.message, // This will show the specific error message
+      message: err.message,
     });
   }
 };
@@ -72,10 +71,12 @@ const getSpecificProducts = async (req, res) => {
 const createProductRecords = async (req, res) => {
   try {
     await Product.createProductRecords(req.body);
-    res.json({ success: true, message: "Product saved successfully" });
+    res.json({ success: true, message: "Product record saved successfully" });
   } catch (err) {
-    console.error("Error saved product:", err);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("Error saving product record:", err);
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", message: err.message });
   }
 };
 
@@ -83,21 +84,20 @@ const getSpecificProductRecords = async (req, res) => {
   try {
     const { station, shift } = req.query;
 
-    // Validate input
     if (!station || !shift) {
       return res.status(400).json({
-        error: "Missing required parameters: stations and shifts are required",
+        error: "Missing required parameters: station and shift are required",
       });
     }
 
     const requiredData = { station, shift };
-    const downtimeData = await Product.getSpecificProductRecords(requiredData);
-    res.json(downtimeData);
+    const productData = await Product.getSpecificProductRecords(requiredData);
+    res.json(productData);
   } catch (err) {
     console.error("Error fetching product data:", err);
     res.status(500).json({
       error: "Internal Server Error",
-      message: err.message, // This will show the specific error message
+      message: err.message,
     });
   }
 };
@@ -106,23 +106,103 @@ const getSpecificProductReport = async (req, res) => {
   try {
     const { station, shift, date } = req.query;
 
-    // Validate input
     if (!station || !shift || !date) {
       return res.status(400).json({
         error:
-          "Missing required parameters: stations, shifts and date are required",
+          "Missing required parameters: station, shift, and date are required",
       });
     }
 
     const requiredData = { station, shift, date };
-    const downtimeData = await Product.getSpecificProductReport(requiredData);
-    res.json(downtimeData);
+    const productData = await Product.getSpecificProductReport(requiredData);
+    res.json(productData);
   } catch (err) {
     console.error("Error fetching product data:", err);
     res.status(500).json({
       error: "Internal Server Error",
-      message: err.message, // This will show the specific error message
+      message: err.message,
     });
+  }
+};
+
+const updateProductRecord = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      productName,
+      productCode,
+      productGroup,
+      station,
+      productionDate,
+      shift,
+      cycleTime,
+      unitsPerSensorSignal,
+      startTime,
+      endTime,
+      qty,
+      creator,
+    } = req.body;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ error: "Invalid or missing id" });
+    }
+
+    if (
+      !productName ||
+      !productCode ||
+      !productGroup ||
+      !station ||
+      !productionDate ||
+      !shift ||
+      !cycleTime ||
+      !unitsPerSensorSignal ||
+      !startTime ||
+      !endTime ||
+      !qty ||
+      !creator
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Missing required fields for product record update" });
+    }
+
+    const result = await Product.updateProductRecord(id, req.body);
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ error: "Product record not found or inactive" });
+    }
+
+    res.json({ success: true, message: "Product record updated successfully" });
+  } catch (err) {
+    console.error("Error updating product record:", err);
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", message: err.message });
+  }
+};
+
+const deleteProductRecord = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ error: "Invalid or missing id" });
+    }
+
+    const result = await Product.deleteProductRecord(id);
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ error: "Product record not found or inactive" });
+    }
+
+    res.json({ success: true, message: "Product record deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting product record:", err);
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", message: err.message });
   }
 };
 
@@ -135,4 +215,6 @@ module.exports = {
   createProductRecords,
   getSpecificProductRecords,
   getSpecificProductReport,
+  updateProductRecord,
+  deleteProductRecord,
 };

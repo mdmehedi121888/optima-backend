@@ -10,6 +10,8 @@ const {
   createProductRecords,
   getSpecificProductRecords,
   getSpecificProductReport,
+  updateProductRecord,
+  deleteProductRecord,
 } = require("../controllers/productController");
 
 router.get("/", isAuthenticated, getProducts);
@@ -20,5 +22,7 @@ router.post("/", createProduct);
 router.put("/:id", updateProduct);
 router.delete("/:id", deleteProduct);
 router.post("/createProductRecords", createProductRecords);
+router.put("/record/:id", updateProductRecord);
+router.delete("/record/:id", deleteProductRecord);
 
 module.exports = router;

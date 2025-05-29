@@ -110,7 +110,7 @@ class DowntimeProblem {
           parseInt(id),
         ]
       );
-      console.log("Update query result:", result);
+      // console.log("Update query result:", result);
       return result;
     } catch (error) {
       console.error("Database error details:", error);
