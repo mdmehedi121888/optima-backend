@@ -16,9 +16,10 @@ class Station {
       emptyShiftReason,
       unhappyOee,
       happyOee,
+      creator,
     } = stationData;
     const result = await connection2.query(
-      "INSERT INTO `optima_stations_tbl` (stations, stationsGroup, requireOperator, emptyShiftReason, unhappyOee, happyOee) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO `optima_stations_tbl` (stations, stationsGroup, requireOperator, emptyShiftReason, unhappyOee, happyOee, creator) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [
         stations,
         stationsGroup,
@@ -26,6 +27,7 @@ class Station {
         emptyShiftReason,
         unhappyOee,
         happyOee,
+        creator,
       ]
     );
     return result;
@@ -39,9 +41,10 @@ class Station {
       emptyShiftReason,
       unhappyOee,
       happyOee,
+      creator,
     } = updateData;
     const result = await connection2.query(
-      "UPDATE optima_stations_tbl SET stations = ?, stationsGroup = ?, requireOperator = ?, emptyShiftReason = ?, unhappyOee = ?, happyOee = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_active = 1",
+      "UPDATE optima_stations_tbl SET stations = ?, stationsGroup = ?, requireOperator = ?, emptyShiftReason = ?, unhappyOee = ?, happyOee = ?, creator = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_active = 1",
       [
         stations,
         stationsGroup,
@@ -49,6 +52,7 @@ class Station {
         emptyShiftReason,
         unhappyOee,
         happyOee,
+        creator,
         id,
       ]
     );

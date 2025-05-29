@@ -17,9 +17,10 @@ class Product {
       unit,
       cycleTime,
       unitsPerSensorSignal,
+      creator,
     } = productData;
     const result = await connection2.query(
-      "INSERT INTO `optima_products_tbl` (productName, productCode, productGroup, stations, unit, cycleTime, unitsPerSensorSignal) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO `optima_products_tbl` (productName, productCode, productGroup, stations, unit, cycleTime, unitsPerSensorSignal, creator) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       [
         productName,
         productCode,
@@ -28,6 +29,7 @@ class Product {
         unit,
         cycleTime,
         unitsPerSensorSignal,
+        creator,
       ]
     );
     return result;
@@ -42,9 +44,10 @@ class Product {
       unit,
       cycleTime,
       unitsPerSensorSignal,
+      creator,
     } = updateData;
     const result = await connection2.query(
-      "UPDATE optima_products_tbl SET productName = ?, productCode = ?, productGroup = ?, stations = ?, unit = ?, cycleTime = ?, unitsPerSensorSignal = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_active = 1",
+      "UPDATE optima_products_tbl SET productName = ?, productCode = ?, productGroup = ?, stations = ?, unit = ?, cycleTime = ?, unitsPerSensorSignal = ?, creator = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_active = 1",
       [
         productName,
         productCode,
@@ -53,6 +56,7 @@ class Product {
         unit,
         cycleTime,
         unitsPerSensorSignal,
+        creator,
         id,
       ]
     );
@@ -93,9 +97,10 @@ class Product {
       startTime,
       endTime,
       qty,
+      creator,
     } = productData;
     const result = await connection2.query(
-      "INSERT INTO `optima_product_tracking_tbl` (productName, productCode, productGroup, station, productionDate, shift, cycleTime, unitsPerSensorSignal, startTime, endTime, qty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO `optima_product_tracking_tbl` (productName, productCode, productGroup, station, productionDate, shift, cycleTime, unitsPerSensorSignal, startTime, endTime, qty, creator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         productName,
         productCode,
@@ -108,6 +113,7 @@ class Product {
         startTime,
         endTime,
         qty,
+        creator,
       ]
     );
     return result;
@@ -119,8 +125,22 @@ class Product {
     try {
       const { station, shift } = requiredData;
       const result = await connection2.query(
-        "SELECT * FROM optima_product_tracking_tbl WHERE station =? AND shift = ? AND productionDate = ? AND is_active = 1",
+        "SELECT * FROM optima_product_tracking_tbl WHERE station = ? AND shift = ? AND productionDate = ? AND is_active = 1",
         [station, shift, currentDate]
+      );
+      return result;
+    } catch (error) {
+      throw new Error(`Database query failed: ${error.message}`);
+    }
+  }
+
+  static async getSpecificProductReport(requiredData) {
+    try {
+      const { station, shift, date } = requiredData;
+      // console.log("requiredData: ", requiredData);
+      const result = await connection2.query(
+        "SELECT * FROM optima_product_tracking_tbl WHERE station = ? AND shift = ? AND productionDate = ? AND is_active = 1",
+        [station, shift, date]
       );
       return result;
     } catch (error) {

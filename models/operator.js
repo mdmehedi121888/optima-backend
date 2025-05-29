@@ -9,20 +9,20 @@ class Operator {
   }
 
   static async create(operatorData) {
-    const { userId, password, userName, userImage, stations, shift } =
+    const { userId, password, userName, userImage, stations, shift, creator } =
       operatorData;
     const result = await connection2.query(
-      "INSERT INTO `optima_operators_tbl` (userId, password, userName, userImage, stations, shift) VALUES (?, ?, ?, ?, ?, ?)",
-      [userId, password, userName, userImage, stations, shift]
+      "INSERT INTO `optima_operators_tbl` (userId, password, userName, userImage, stations, shift, creator) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [userId, password, userName, userImage, stations, shift, creator]
     );
     return result;
   }
 
   static async update(id, updateData) {
-    const { password, stations, shift } = updateData;
+    const { password, stations, shift, creator } = updateData;
     const result = await connection2.query(
-      "UPDATE optima_operators_tbl SET password = ?, stations = ?, shift = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_active = 1",
-      [password, stations, shift, id]
+      "UPDATE optima_operators_tbl SET password = ?, stations = ?, shift = ?, creator = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_active = 1",
+      [password, stations, shift, creator, id]
     );
     return result;
   }

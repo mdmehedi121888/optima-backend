@@ -28,34 +28,110 @@ class DowntimeProblem {
       productGroup,
       station,
       productionDate,
+      shift,
       cycleTime,
       unitsPerSensorSignal,
       startTime,
       endTime,
       location,
+      problem_group,
       problemReason,
       planned_status,
-      shift,
+      creator,
     } = problemData;
-    const result = await connection2.query(
-      "INSERT INTO `optima_downtime_tracking_tbl` (productName, productCode, productGroup, station, productionDate, shift, cycleTime, unitsPerSensorSignal, problem_name,  startTime, endTime, location, planned_status) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [
-        productName,
-        productCode,
-        productGroup,
-        station,
-        productionDate,
-        shift,
-        cycleTime,
-        unitsPerSensorSignal,
-        problemReason,
-        startTime,
-        endTime,
-        location,
-        planned_status,
-      ]
-    );
-    return result;
+    try {
+      const result = await connection2.query(
+        "INSERT INTO `optima_downtime_tracking_tbl` (productName, productCode, productGroup, station, productionDate, shift, cycleTime, unitsPerSensorSignal, problem_group, problem_name, startTime, endTime, location, planned_status, creator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          productName,
+          productCode,
+          productGroup,
+          station,
+          productionDate,
+          shift,
+          cycleTime,
+          unitsPerSensorSignal,
+          problem_group,
+          problemReason,
+          startTime,
+          endTime,
+          location,
+          planned_status,
+          creator,
+        ]
+      );
+      return result;
+    } catch (error) {
+      console.error("Error creating downtime record:", error);
+      throw new Error(`Database insert failed: ${error.message}`);
+    }
+  }
+
+  static async updateDowntimeRecord(id, problemData) {
+    if (!id || isNaN(id)) {
+      throw new Error("Invalid or missing id");
+    }
+    if (!problemData || typeof problemData !== "object") {
+      throw new Error("Invalid or missing problem data");
+    }
+
+    const {
+      startTime,
+      endTime,
+      problem_group,
+      problem_name,
+      location,
+      planned_status,
+    } = problemData;
+
+    if (
+      !startTime ||
+      !endTime ||
+      !problem_group ||
+      !problem_name ||
+      !location ||
+      !planned_status
+    ) {
+      throw new Error(
+        "Missing required fields: startTime, endTime, problem_group, problem_name, location, or planned_status"
+      );
+    }
+
+    try {
+      const result = await connection2.query(
+        "UPDATE `optima_downtime_tracking_tbl` SET startTime = ?, endTime = ?, problem_group = ?, problem_name = ?, location = ?, planned_status = ? WHERE id = ? AND is_active = 1",
+        [
+          startTime,
+          endTime,
+          problem_group,
+          problem_name,
+          location,
+          planned_status,
+          parseInt(id),
+        ]
+      );
+      console.log("Update query result:", result);
+      return result;
+    } catch (error) {
+      console.error("Database error details:", error);
+      throw new Error(`Database update failed: ${error.message}`);
+    }
+  }
+  static async deleteDowntimeRecord(id) {
+    if (!id || isNaN(id)) {
+      throw new Error("Invalid or missing id");
+    }
+
+    try {
+      const result = await connection2.query(
+        "UPDATE `optima_downtime_tracking_tbl` SET is_active = 0 WHERE id = ?",
+        [parseInt(id)]
+      );
+      return result;
+    } catch (error) {
+      console.error("Database error details:", error);
+      throw new Error(`Database delete failed: ${error.message}`);
+    }
   }
 
   static async getSpecificDowntimeRecords(requiredData) {
@@ -64,8 +140,21 @@ class DowntimeProblem {
     try {
       const { station, shift } = requiredData;
       const result = await connection2.query(
-        "SELECT * FROM optima_downtime_tracking_tbl WHERE station =? AND shift = ? AND productionDate = ? AND is_active = 1",
+        "SELECT * FROM optima_downtime_tracking_tbl WHERE station = ? AND shift = ? AND productionDate = ? AND is_active = 1",
         [station, shift, currentDate]
+      );
+      return result;
+    } catch (error) {
+      throw new Error(`Database query failed: ${error.message}`);
+    }
+  }
+
+  static async getSpecificDowntimeRecordsByDate(requiredData) {
+    try {
+      const { station, shift, date } = requiredData;
+      const result = await connection2.query(
+        "SELECT * FROM optima_downtime_tracking_tbl WHERE station = ? AND shift = ? AND productionDate = ? AND is_active = 1",
+        [station, shift, date]
       );
       return result;
     } catch (error) {

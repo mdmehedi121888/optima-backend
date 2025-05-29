@@ -20,19 +20,21 @@ class Shift {
   }
 
   static async create(shiftData) {
-    const { shiftName, startTime, endTime, stations, days } = shiftData;
+    const { shiftName, startTime, endTime, stations, days, creator } =
+      shiftData;
     const result = await connection2.query(
-      "INSERT INTO `optima_shifts_tbl` (shiftName, startTime, endTime, stations, days) VALUES (?, ?, ?, ?, ?)",
-      [shiftName, startTime, endTime, stations, days]
+      "INSERT INTO `optima_shifts_tbl` (shiftName, startTime, endTime, stations, days, creator) VALUES (?, ?, ?, ?, ?, ?)",
+      [shiftName, startTime, endTime, stations, days, creator]
     );
     return result;
   }
 
   static async update(id, updateData) {
-    const { shiftName, startTime, endTime, stations, days } = updateData;
+    const { shiftName, startTime, endTime, stations, days, creator } =
+      updateData;
     const result = await connection2.query(
-      "UPDATE optima_shifts_tbl SET shiftName = ?, startTime = ?, endTime = ?, stations = ?, days = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_active = 1",
-      [shiftName, startTime, endTime, stations, days, id]
+      "UPDATE optima_shifts_tbl SET shiftName = ?, startTime = ?, endTime = ?, stations = ?, days = ?, creator = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_active = 1",
+      [shiftName, startTime, endTime, stations, days, creator, id]
     );
     return result;
   }

@@ -27,19 +27,20 @@ class User {
   }
 
   static async create(userData) {
-    const { userId, userName, userImage, password, role, stations } = userData;
+    const { userId, userName, userImage, password, role, stations, creator } =
+      userData;
     const result = await connection2.query(
-      "INSERT INTO `optima_users_tbl` (userId, userName, userImage, password, role, stations) VALUES (?, ?, ?, ?, ?, ?)",
-      [userId, userName, userImage, password, role, stations]
+      "INSERT INTO `optima_users_tbl` (userId, userName, userImage, password, role, stations, creator) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [userId, userName, userImage, password, role, stations, creator]
     );
     return result;
   }
 
   static async update(id, updateData) {
-    const { password, role, stations } = updateData;
+    const { password, role, stations, creator } = updateData;
     const result = await connection2.query(
-      "UPDATE optima_users_tbl SET password = ?, role = ?, stations = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_active = 1",
-      [password, role, stations, id]
+      "UPDATE optima_users_tbl SET password = ?, role = ?, stations = ?, creator = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_active = 1",
+      [password, role, stations, creator, id]
     );
     return result;
   }
