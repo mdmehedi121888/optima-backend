@@ -117,6 +117,7 @@ class DowntimeProblem {
       throw new Error(`Database update failed: ${error.message}`);
     }
   }
+
   static async deleteDowntimeRecord(id) {
     if (!id || isNaN(id)) {
       throw new Error("Invalid or missing id");
