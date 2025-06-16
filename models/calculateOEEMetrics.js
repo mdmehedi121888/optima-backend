@@ -344,6 +344,37 @@ class OEEMetrics {
       throw new Error(`Failed to fetch OEE metrics: ${error.message}`);
     }
   }
+
+  static async getOEEMetricsByAll() {
+    try {
+      // Query to fetch OEE metrics from optima_oee_metrics_tbl
+      const result = await connection2.query(
+        `SELECT *
+       FROM optima_oee_metrics_tbl
+       WHERE is_active = 1`
+      );
+
+      // Check if data exists
+      if (result.length === 0) {
+        return {
+          message: "No OEE metrics found",
+          data: null,
+        };
+      }
+
+      // Parse JSON strings in hourlyOEE and totalOEE
+      const formattedResult = result.map((item) => ({
+        ...item,
+        hourlyOEE: JSON.parse(item.hourlyOEE),
+        totalOEE: JSON.parse(item.totalOEE),
+      }));
+
+      return formattedResult;
+    } catch (error) {
+      console.error("Error fetching OEE metrics from database:", error);
+      throw new Error(`Failed to fetch OEE metrics: ${error.message}`);
+    }
+  }
 }
 
 module.exports = OEEMetrics;

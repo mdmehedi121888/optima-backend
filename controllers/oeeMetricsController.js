@@ -112,6 +112,27 @@ class OEEMetricsController {
         .json({ error: `Failed to retrieve OEE metrics: ${error.message}` });
     }
   }
+
+  static async getOEEMetricsByAll(req, res) {
+    try {
+      const result = await OEEMetrics.getOEEMetricsByAll();
+      if (result.data === null) {
+        return res.status(404).json({
+          message: result.message,
+        });
+      }
+
+      return res.status(200).json({
+        message: "OEE metrics retrieved successfully",
+        data: result,
+      });
+    } catch (error) {
+      console.error("Error in getOEEMetricsByAll:", error);
+      return res
+        .status(500)
+        .json({ error: `Failed to retrieve OEE metrics: ${error.message}` });
+    }
+  }
 }
 
 module.exports = OEEMetricsController;
