@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const { isAuthenticated } = require("../middleware/auth");
 const {
   getStations,
   createStation,
@@ -8,7 +7,7 @@ const {
   deleteStation,
 } = require("../controllers/stationController");
 
-router.get("/", isAuthenticated, getStations);
+router.get("/", getStations);
 router.post("/", createStation);
 router.put("/:id", updateStation);
 router.delete("/:id", deleteStation);

@@ -15,6 +15,7 @@ class OEEMetrics {
     let totalProductionTime = 0;
     let totalActualProductionTime = 0;
     let totalAchievedQty = 0;
+    let totalTargetQty = 0;
     let totalGoodAchievedQty = 0;
 
     try {
@@ -22,12 +23,21 @@ class OEEMetrics {
         const fromTime = `${hour.toString().padStart(2, "0")}:00:00`;
         const toTime = `${(hour + 1).toString().padStart(2, "0")}:00:00`;
 
-        // Fetch downtime duration
-        const downtimeRows = await connection2.query(
+        // Fetch unplannedDowntime duration
+        const unplannedDowntimeRows = await connection2.query(
           `SELECT SUM(TIMESTAMPDIFF(MINUTE, GREATEST(startTime, ?), LEAST(endTime, ?)) + 1) AS duration_minutes
            FROM optima_downtime_tracking_tbl
            WHERE is_active = 1 AND station = ? AND productionDate = ? AND shift = ?
            AND planned_status = 'unplanned' AND startTime < ? AND endTime > ?`,
+          [fromTime, toTime, station, productionDate, shift, toTime, fromTime]
+        );
+
+        // Fetch plannedDowntime duration
+        const plannedDowntimeRows = await connection2.query(
+          `SELECT SUM(TIMESTAMPDIFF(MINUTE, GREATEST(startTime, ?), LEAST(endTime, ?)) + 1) AS duration_minutes
+           FROM optima_downtime_tracking_tbl
+           WHERE is_active = 1 AND station = ? AND productionDate = ? AND shift = ?
+           AND planned_status = 'planned' AND startTime < ? AND endTime > ?`,
           [fromTime, toTime, station, productionDate, shift, toTime, fromTime]
         );
 
@@ -58,8 +68,9 @@ class OEEMetrics {
         );
 
         // Hourly calculations
-        const downtime = downtimeRows[0].duration_minutes || 0;
-        const plannedTime = 60;
+        const downtime = unplannedDowntimeRows[0].duration_minutes || 0;
+        const plannedDowntime = plannedDowntimeRows[0].duration_minutes || 0;
+        const plannedTime = 60 - plannedDowntime;
         const runningTime = plannedTime - downtime;
         const availability =
           plannedTime === 0
@@ -97,11 +108,14 @@ class OEEMetrics {
         totalProductionTime += productionTime;
         totalActualProductionTime += actualProductionTime;
         totalAchievedQty += achievedQtyPerHour;
-        totalGoodAchievedQty += goodAchievedQtyPerHour;
+        totalGoodAchievedQty += parseInt(goodAchievedQtyPerHour);
+        totalTargetQty += parseInt(targetPerHour);
 
         // Store hourly data
         data.push({
           hour: `${fromTime} - ${toTime}`,
+          targetPerHour: parseInt(targetPerHour),
+          achievedQtyPerHour: parseInt(achievedQtyPerHour),
           availability: parseFloat(availability),
           performance: parseFloat(performance),
           quality: parseFloat(quality),
@@ -132,11 +146,12 @@ class OEEMetrics {
       // Shift summary for totalOEE
       const totalOEE = {
         shift: `${shift} Shift (${shiftStartTime}:00 - ${shiftEndTime}:00)`,
-        total_planned_minutes: totalPlannedTime,
-        total_running_minutes: totalRunningTime,
-        total_downtime_minutes: totalDowntime,
-        total_achieved_qty: Math.round(totalAchievedQty),
-        total_good_qty: Math.round(totalGoodAchievedQty),
+        totalPlannedMinutes: totalPlannedTime,
+        totalRunningMinutes: totalRunningTime,
+        totalDowntimeMinutes: totalDowntime,
+        totalAchievedQty: Math.round(totalAchievedQty),
+        totalTargetQty: Math.round(totalTargetQty),
+        totalGoodQty: Math.round(totalGoodAchievedQty),
         availability: parseFloat(shiftAvailability),
         performance: parseFloat(shiftPerformance),
         quality: parseFloat(shiftQuality),
@@ -205,7 +220,7 @@ class OEEMetrics {
           `${shiftEndTime}:00:00`,
           JSON.stringify(hourlyOEE),
           JSON.stringify(totalOEE),
-          creator || "system",
+          creator,
         ]
       );
       return result;
@@ -290,7 +305,7 @@ class OEEMetrics {
         shiftEndTime,
         hourlyOEE,
         totalOEE,
-        creator: creator || "system",
+        creator: creator,
       };
 
       if (existingId) {
