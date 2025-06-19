@@ -11,12 +11,14 @@ class OEEMetrics {
     const data = [];
     let totalPlannedTime = 0;
     let totalRunningTime = 0;
-    let totalDowntime = 0;
+    let totalUnplannedDowntime = 0;
+    let totalPlannedDowntime = 0;
     let totalProductionTime = 0;
     let totalActualProductionTime = 0;
     let totalAchievedQty = 0;
     let totalTargetQty = 0;
     let totalGoodAchievedQty = 0;
+    let totalScrapAchievedQty = 0;
 
     try {
       for (let hour = shiftStartTime; hour < shiftEndTime; hour++) {
@@ -25,7 +27,7 @@ class OEEMetrics {
 
         // Fetch unplannedDowntime duration
         const unplannedDowntimeRows = await connection2.query(
-          `SELECT SUM(TIMESTAMPDIFF(MINUTE, GREATEST(startTime, ?), LEAST(endTime, ?)) + 1) AS duration_minutes
+          `SELECT SUM(TIMESTAMPDIFF(MINUTE, GREATEST(startTime, ?), LEAST(endTime, ?))) AS duration_minutes
            FROM optima_downtime_tracking_tbl
            WHERE is_active = 1 AND station = ? AND productionDate = ? AND shift = ?
            AND planned_status = 'unplanned' AND startTime < ? AND endTime > ?`,
@@ -34,7 +36,7 @@ class OEEMetrics {
 
         // Fetch plannedDowntime duration
         const plannedDowntimeRows = await connection2.query(
-          `SELECT SUM(TIMESTAMPDIFF(MINUTE, GREATEST(startTime, ?), LEAST(endTime, ?)) + 1) AS duration_minutes
+          `SELECT SUM(TIMESTAMPDIFF(MINUTE, GREATEST(startTime, ?), LEAST(endTime, ?))) AS duration_minutes
            FROM optima_downtime_tracking_tbl
            WHERE is_active = 1 AND station = ? AND productionDate = ? AND shift = ?
            AND planned_status = 'planned' AND startTime < ? AND endTime > ?`,
@@ -67,29 +69,37 @@ class OEEMetrics {
           [`${productionDate} ${fromTime}`, `${productionDate} ${toTime}`]
         );
 
-        // Hourly calculations
-        const downtime = unplannedDowntimeRows[0].duration_minutes || 0;
+        //----------------- Hourly calculations sections start ----------------
+
+        //-------------- Availability calculation ---------------
+
+        const unplannedDowntime =
+          unplannedDowntimeRows[0].duration_minutes || 0;
         const plannedDowntime = plannedDowntimeRows[0].duration_minutes || 0;
         const plannedTime = 60 - plannedDowntime;
-        const runningTime = plannedTime - downtime;
+        const runningTime = plannedTime - unplannedDowntime;
+
         const availability =
           plannedTime === 0
             ? 0
             : ((runningTime / plannedTime) * 100).toFixed(2);
 
-        const targetPerHour = targetQtyRows[0]?.target_per_hour || 0;
+        //-------------- Performance calculation ---------------
+
         const unitsPerSensorSignal =
           targetQtyRows[0]?.unitsPerSensorSignal || 0;
-
+        let targetPerHour = targetQtyRows[0]?.target_per_hour || 0;
+        targetPerHour = targetPerHour > 0 && (targetPerHour / 60) * plannedTime;
         const cycleTime = targetPerHour !== 0 ? plannedTime / targetPerHour : 0;
         const rawAchieved = achivedQtyRows[0]?.total_production_per_hour || 0;
         const achievedQtyPerHour = rawAchieved * unitsPerSensorSignal;
-
         const productionTime = achievedQtyPerHour * cycleTime;
         const performance =
           runningTime === 0
             ? 0
             : ((productionTime / runningTime) * 100).toFixed(2);
+
+        //-------------- Quality calculation ---------------
 
         const scrapQtyPerHour = scrapQtyRows[0]?.scrap_qty || 0;
         const goodAchievedQtyPerHour = achievedQtyPerHour - scrapQtyPerHour;
@@ -99,59 +109,81 @@ class OEEMetrics {
             ? 0
             : ((actualProductionTime / productionTime) * 100).toFixed(2);
 
+        //-------------- OEE calculation ---------------
+
         const oee = ((availability * performance * quality) / 10000).toFixed(2);
 
-        // Accumulate totals
-        totalPlannedTime += plannedTime;
-        totalRunningTime += runningTime;
-        totalDowntime += downtime;
-        totalProductionTime += productionTime;
-        totalActualProductionTime += actualProductionTime;
-        totalAchievedQty += achievedQtyPerHour;
-        totalGoodAchievedQty += parseInt(goodAchievedQtyPerHour);
-        totalTargetQty += parseInt(targetPerHour);
-
-        // Store hourly data
+        //---------------- Store hourly data ------------------
         data.push({
           hour: `${fromTime} - ${toTime}`,
           targetPerHour: parseInt(targetPerHour),
           achievedQtyPerHour: parseInt(achievedQtyPerHour),
+          plannedDowntime: plannedDowntime,
+          unplannedDowntime: unplannedDowntime,
           availability: parseFloat(availability),
           performance: parseFloat(performance),
           quality: parseFloat(quality),
           oee: parseFloat(oee),
         });
+
+        //-------------- Accumulate totals ---------------
+
+        totalPlannedTime += parseInt(plannedTime);
+        totalRunningTime += parseInt(runningTime);
+        totalUnplannedDowntime += parseInt(unplannedDowntime);
+        totalPlannedDowntime += parseInt(plannedDowntime);
+        totalProductionTime += parseInt(productionTime);
+        totalActualProductionTime += parseInt(actualProductionTime);
+        totalAchievedQty += parseInt(achievedQtyPerHour);
+        totalGoodAchievedQty += parseInt(goodAchievedQtyPerHour);
+        totalScrapAchievedQty += parseInt(scrapQtyPerHour);
+        totalTargetQty += parseInt(targetPerHour);
       }
 
-      // Calculate shift-level KPIs
+      //---------------Calculate Total shift section calculaiton start -------------
+
+      //-------------- Total Availability calculation ---------------
+
       const shiftAvailability = (
         (totalRunningTime / totalPlannedTime) *
         100
       ).toFixed(2);
+
+      //-------------- Total Performance calculation ---------------
+
       const shiftPerformance = (
         totalRunningTime === 0
           ? 0
           : (totalProductionTime / totalRunningTime) * 100
       ).toFixed(2);
+
+      //-------------- Total Quality calculation ---------------
+
       const shiftQuality = (
         totalProductionTime === 0
           ? 0
           : (totalActualProductionTime / totalProductionTime) * 100
       ).toFixed(2);
+
+      //-------------- Total OEE calculation ---------------
+
       const shiftOEE = (
         (shiftAvailability * shiftPerformance * shiftQuality) /
         10000
       ).toFixed(2);
 
-      // Shift summary for totalOEE
+      //--------------- store  Shift summary for totalOEE -------------------
+
       const totalOEE = {
         shift: `${shift} Shift (${shiftStartTime}:00 - ${shiftEndTime}:00)`,
         totalPlannedMinutes: totalPlannedTime,
         totalRunningMinutes: totalRunningTime,
-        totalDowntimeMinutes: totalDowntime,
+        totalPlannedDowntimeMinutes: totalPlannedDowntime,
+        totalUnplannedDowntimeMinutes: totalUnplannedDowntime,
         totalAchievedQty: Math.round(totalAchievedQty),
         totalTargetQty: Math.round(totalTargetQty),
         totalGoodQty: Math.round(totalGoodAchievedQty),
+        totalScrapQty: Math.round(totalScrapAchievedQty),
         availability: parseFloat(shiftAvailability),
         performance: parseFloat(shiftPerformance),
         quality: parseFloat(shiftQuality),
@@ -364,9 +396,7 @@ class OEEMetrics {
     try {
       // Query to fetch OEE metrics from optima_oee_metrics_tbl
       const result = await connection2.query(
-        `SELECT *
-       FROM optima_oee_metrics_tbl
-       WHERE is_active = 1`
+        `SELECT * FROM optima_oee_metrics_tbl WHERE is_active = 1 ORDER BY id DESC`
       );
 
       // Check if data exists
