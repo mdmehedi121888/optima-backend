@@ -71,6 +71,11 @@ class OEEMetrics {
 
         //----------------- Hourly calculations sections start ----------------
 
+        let availability = 0,
+          performance = 0,
+          quality = 0,
+          oee = 0;
+
         //-------------- Availability calculation ---------------
 
         const unplannedDowntime =
@@ -79,7 +84,7 @@ class OEEMetrics {
         const plannedTime = 60 - plannedDowntime;
         const runningTime = plannedTime - unplannedDowntime;
 
-        const availability =
+        availability =
           plannedTime === 0
             ? 0
             : ((runningTime / plannedTime) * 100).toFixed(2);
@@ -94,7 +99,7 @@ class OEEMetrics {
         const rawAchieved = achivedQtyRows[0]?.total_production_per_hour || 0;
         const achievedQtyPerHour = rawAchieved * unitsPerSensorSignal;
         const productionTime = achievedQtyPerHour * cycleTime;
-        const performance =
+        performance =
           runningTime === 0
             ? 0
             : ((productionTime / runningTime) * 100).toFixed(2);
@@ -104,22 +109,24 @@ class OEEMetrics {
         const scrapQtyPerHour = scrapQtyRows[0]?.scrap_qty || 0;
         const goodAchievedQtyPerHour = achievedQtyPerHour - scrapQtyPerHour;
         const actualProductionTime = goodAchievedQtyPerHour * cycleTime;
-        const quality =
+        quality =
           productionTime === 0
             ? 0
             : ((actualProductionTime / productionTime) * 100).toFixed(2);
 
         //-------------- OEE calculation ---------------
 
-        const oee = ((availability * performance * quality) / 10000).toFixed(2);
+        oee = ((availability * performance * quality) / 10000).toFixed(2);
 
         //---------------- Store hourly data ------------------
         data.push({
           hour: `${fromTime} - ${toTime}`,
-          targetPerHour: parseInt(targetPerHour),
-          achievedQtyPerHour: parseInt(achievedQtyPerHour),
-          plannedDowntime: plannedDowntime,
-          unplannedDowntime: unplannedDowntime,
+          targetPerHour: targetPerHour ? parseInt(targetPerHour) : 0,
+          achievedQtyPerHour: achievedQtyPerHour
+            ? parseInt(achievedQtyPerHour)
+            : 0,
+          plannedDowntime: plannedDowntime ? plannedDowntime : 0,
+          unplannedDowntime: unplannedDowntime ? unplannedDowntime : 0,
           availability: parseFloat(availability),
           performance: parseFloat(performance),
           quality: parseFloat(quality),
