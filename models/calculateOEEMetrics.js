@@ -21,7 +21,13 @@ class OEEMetrics {
     let totalScrapAchievedQty = 0;
 
     try {
-      for (let hour = shiftStartTime; hour < shiftEndTime; hour++) {
+      // Get current time and round up to the next hour
+      const now = new Date();
+      const currentHour = Math.ceil(now.getHours() + now.getMinutes() / 60);
+      // Limit the end time to the next hour or shiftEndTime, whichever is earlier
+      const effectiveEndTime = Math.min(currentHour, shiftEndTime);
+
+      for (let hour = shiftStartTime; hour < effectiveEndTime; hour++) {
         const fromTime = `${hour.toString().padStart(2, "0")}:00:00`;
         const toTime = `${(hour + 1).toString().padStart(2, "0")}:00:00`;
 
@@ -61,9 +67,21 @@ class OEEMetrics {
           [station, productionDate, shift, toTime, fromTime]
         );
 
+        const lineColumnMap = {
+          "Final Line": "final_line_diff",
+          "Internal Line": "internal_line_diff",
+          "External Line": "external_line_diff",
+        };
+
+        if (!lineColumnMap.hasOwnProperty(station)) {
+          throw new Error(`Invalid station name: ${station}`);
+        }
+
+        const column = lineColumnMap[station];
+
         // Fetch achieved quantity
         const achivedQtyRows = await connection.query(
-          `SELECT SUM(final_line_diff) AS total_production_per_hour
+          `SELECT SUM(${column}) AS total_production_per_hour
            FROM optima_machine_data_entry
            WHERE timestamp >= ? AND timestamp < ?`,
           [`${productionDate} ${fromTime}`, `${productionDate} ${toTime}`]
@@ -142,18 +160,17 @@ class OEEMetrics {
         totalProductionTime += parseInt(productionTime);
         totalActualProductionTime += parseInt(actualProductionTime);
         totalAchievedQty += parseInt(achievedQtyPerHour);
+        totalTargetQty += parseInt(targetPerHour);
         totalGoodAchievedQty += parseInt(goodAchievedQtyPerHour);
         totalScrapAchievedQty += parseInt(scrapQtyPerHour);
-        totalTargetQty += parseInt(targetPerHour);
       }
 
-      //---------------Calculate Total shift section calculaiton start -------------
+      //---------------Calculate Total shift section calculation start -------------
 
       //-------------- Total Availability calculation ---------------
 
       const shiftAvailability = (
-        (totalRunningTime / totalPlannedTime) *
-        100
+        totalPlannedTime === 0 ? 0 : (totalRunningTime / totalPlannedTime) * 100
       ).toFixed(2);
 
       //-------------- Total Performance calculation ---------------
@@ -179,10 +196,10 @@ class OEEMetrics {
         10000
       ).toFixed(2);
 
-      //--------------- store  Shift summary for totalOEE -------------------
+      //--------------- Store Shift summary for totalOEE -------------------
 
       const totalOEE = {
-        shift: `${shift} Shift (${shiftStartTime}:00 - ${shiftEndTime}:00)`,
+        shift: `${shift} Shift (${shiftStartTime}:00 - ${effectiveEndTime}:00)`,
         totalPlannedMinutes: totalPlannedTime,
         totalRunningMinutes: totalRunningTime,
         totalPlannedDowntimeMinutes: totalPlannedDowntime,

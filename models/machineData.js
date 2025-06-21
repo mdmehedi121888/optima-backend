@@ -13,11 +13,11 @@ class MachineData {
         "External Line": "external_line_diff",
       };
 
-      const column = lineColumnMap[line] || "final_line_diff";
+      const column = lineColumnMap[line];
       const today = new Date().toISOString().split("T")[0];
 
-      const startTimestamp = `${today} ${startTime || "00:00"}:00`;
-      const endTimestamp = `${today} ${endTime || "23:59"}:00`;
+      const startTimestamp = `${today} ${startTime}:00`;
+      const endTimestamp = `${today} ${endTime}:00`;
 
       const query = `
         SELECT ${column}, timestamp 

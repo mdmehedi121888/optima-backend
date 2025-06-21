@@ -14,6 +14,7 @@ const speedLossReasonRoutes = require("./routes/speedLossReasonRoutes");
 const scrapReasonRoutes = require("./routes/scrapReasonRoutes");
 const locationRoutes = require("./routes/locationRoutes");
 const oeeMetricsRoutes = require("./routes/oeeMetricsRoutes");
+const stationStatusRoutes = require("./routes/stationStatusRoutes");
 
 const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
@@ -63,6 +64,7 @@ app.use("/api/speedLossReasons", speedLossReasonRoutes);
 app.use("/api/scrapReasons", scrapReasonRoutes);
 app.use("/api/locations", locationRoutes);
 app.use("/api/oee-metrics", oeeMetricsRoutes);
+app.use("/api/stationStatus", stationStatusRoutes);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Optima Backend Server!");
