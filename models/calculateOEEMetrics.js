@@ -27,6 +27,19 @@ class OEEMetrics {
       // Limit the end time to the next hour or shiftEndTime, whichever is earlier
       const effectiveEndTime = Math.min(currentHour, shiftEndTime);
 
+      // Compute adjusted date for Night shift post-midnight
+      function getShiftDate(shift, productionDate) {
+        const currentHour = new Date().getHours();
+
+        if (shift === "Night" && currentHour >= 0 && currentHour < 12) {
+          const nextDay = new Date(productionDate);
+          nextDay.setDate(nextDay.getDate() + 1);
+          return nextDay.toISOString().split("T")[0]; // format YYYY-MM-DD
+        }
+
+        return productionDate;
+      }
+
       for (let hour = shiftStartTime; hour < effectiveEndTime; hour++) {
         const fromTime = `${hour.toString().padStart(2, "0")}:00:00`;
         const toTime = `${(hour + 1).toString().padStart(2, "0")}:00:00`;
@@ -79,12 +92,26 @@ class OEEMetrics {
 
         const column = lineColumnMap[station];
 
+        // Fetch achieved quantity  ----- previous logic -------
+        // const achivedQtyRows = await connection.query(
+        //   `SELECT SUM(${column}) AS total_production_per_hour
+        //    FROM optima_machine_data_entry
+        //    WHERE timestamp >= ? AND timestamp < ?`,
+        //   [`${productionDate} ${fromTime}`, `${productionDate} ${toTime}`]
+        // );
+
+        // Adjusted production date logic
+        const adjustedProductionDate = getShiftDate(shift, productionDate);
+
         // Fetch achieved quantity
         const achivedQtyRows = await connection.query(
           `SELECT SUM(${column}) AS total_production_per_hour
-           FROM optima_machine_data_entry
-           WHERE timestamp >= ? AND timestamp < ?`,
-          [`${productionDate} ${fromTime}`, `${productionDate} ${toTime}`]
+          FROM optima_machine_data_entry
+          WHERE timestamp >= ? AND timestamp < ?`,
+          [
+            `${adjustedProductionDate} ${fromTime}`,
+            `${adjustedProductionDate} ${toTime}`,
+          ]
         );
 
         //----------------- Hourly calculations sections start ----------------

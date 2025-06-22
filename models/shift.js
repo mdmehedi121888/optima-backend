@@ -33,7 +33,7 @@ class Shift {
     const { shiftName, startTime, endTime, stations, days, creator } =
       updateData;
     const result = await connection2.query(
-      "UPDATE optima_shifts_tbl SET shiftName = ?, startTime = ?, endTime = ?, stations = ?, days = ?, creator = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_active = 1",
+      "UPDATE optima_shifts_tbl SET shiftName = ?, startTime = ?, endTime = ?, stations = ?, days = ?, creator = ?, is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
       [shiftName, startTime, endTime, stations, days, creator, id]
     );
     return result;
