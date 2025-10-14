@@ -30,7 +30,7 @@ app.use(bodyParser.json());
 // CORS configuration
 app.use(
   cors({
-    origin: "http://localhost:3000", // Specify the exact origin of your frontend
+    origin: `${process.env.FRONTEND_URL}`, // Specify the exact origin of your frontend
     credentials: true, // Allow credentials (cookies, authorization headers, etc.)
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed HTTP methods
     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers

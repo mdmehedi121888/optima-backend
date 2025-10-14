@@ -129,7 +129,7 @@ const updateDowntimeRecord = async (req, res) => {
       startTime,
       endTime,
       problem_group,
-      problem_name,
+      problemReason,
       location,
       planned_status,
     } = req.body;
@@ -140,13 +140,13 @@ const updateDowntimeRecord = async (req, res) => {
       !startTime ||
       !endTime ||
       !problem_group ||
-      !problem_name ||
+      !problemReason ||
       !location ||
       !planned_status
     ) {
       return res.status(400).json({
         message:
-          "Missing required fields: startTime, endTime, problem_group, problem_name, location, or planned_status",
+          "Missing required fields: startTime, endTime, problem_group, problemReason, location, or planned_status",
       });
     }
     const result = await DowntimeProblem.updateDowntimeRecord(id, req.body);

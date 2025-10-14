@@ -1,4 +1,3 @@
-// machineData.js
 const { connection } = require("../config/db");
 
 class MachineData {
@@ -14,7 +13,17 @@ class MachineData {
       };
 
       const column = lineColumnMap[line];
-      const today = new Date().toISOString().split("T")[0];
+
+      // Get current date in Asia/Dhaka timezone
+      const formatter = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Dhaka",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+      const [{ value: year }, , { value: month }, , { value: day }] =
+        formatter.formatToParts(new Date());
+      const today = `${year}-${month}-${day}`;
 
       const startTimestamp = `${today} ${startTime}:00`;
       const endTimestamp = `${today} ${endTime}:00`;
@@ -30,7 +39,23 @@ class MachineData {
       // console.log("Executing query:", query, "with params:", queryParams);
 
       const result = await connection.query(query, queryParams);
-      return result;
+      // Ensure timestamps in result are in Asia/Dhaka
+      const adjustedResult = result.map((row) => ({
+        ...row,
+        timestamp: new Date(row.timestamp)
+          .toLocaleString("en-US", {
+            timeZone: "Asia/Dhaka",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
+          })
+          .replace(/,/, ""),
+      }));
+      return adjustedResult;
     } catch (error) {
       console.error("Error querying machine data:", error);
       throw error;

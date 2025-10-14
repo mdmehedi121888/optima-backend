@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  optima-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: optima-backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - optima-network
+
+networks:
+  optima-network:
+    driver: bridge

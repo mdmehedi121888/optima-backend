@@ -68,6 +68,7 @@ class DowntimeProblem {
   }
 
   static async updateDowntimeRecord(id, problemData) {
+    // console.log("id and problemData :", id, problemData);
     if (!id || isNaN(id)) {
       throw new Error("Invalid or missing id");
     }
@@ -79,7 +80,7 @@ class DowntimeProblem {
       startTime,
       endTime,
       problem_group,
-      problem_name,
+      problemReason,
       location,
       planned_status,
     } = problemData;
@@ -88,12 +89,12 @@ class DowntimeProblem {
       !startTime ||
       !endTime ||
       !problem_group ||
-      !problem_name ||
+      !problemReason ||
       !location ||
       !planned_status
     ) {
       throw new Error(
-        "Missing required fields: startTime, endTime, problem_group, problem_name, location, or planned_status"
+        "Missing required fields: startTime, endTime, problem_group, problemReason, location, or planned_status"
       );
     }
 
@@ -104,7 +105,7 @@ class DowntimeProblem {
           startTime,
           endTime,
           problem_group,
-          problem_name,
+          problemReason,
           location,
           planned_status,
           parseInt(id),
