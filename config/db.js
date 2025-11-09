@@ -14,7 +14,6 @@ var connection = mysql.createConnection({
 connection.connect(function (err) {
   if (err) {
     console.log(colors.red.bold(`❌ Error connecting: ${err.stack}`));
-    console.log("⚠️ DB Password:", process.env.DB_PASSWORD);
     return;
   }
   console.log(

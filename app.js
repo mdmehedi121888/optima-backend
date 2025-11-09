@@ -19,7 +19,7 @@ const stationStatusRoutes = require("./routes/stationStatusRoutes");
 const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
 
-dotenv.config(); // Load environment variables from .env file
+dotenv.config();
 
 const app = express();
 
@@ -30,21 +30,21 @@ app.use(bodyParser.json());
 // CORS configuration
 app.use(
   cors({
-    origin: `${process.env.FRONTEND_URL}`, // Specify the exact origin of your frontend
-    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed HTTP methods
-    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+    origin: `${process.env.FRONTEND_URL}`,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
 // Session middleware
 app.use(
   session({
-    secret: process.env.SECRET_KEY || "your-default-secret", // Use a secure secret from .env
+    secret: process.env.SECRET_KEY,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // Set to true if using HTTPS
+      secure: false,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     },
   })
